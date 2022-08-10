@@ -6,18 +6,38 @@
 Name: @Product.Name<br />
 Active: @Product.IsActive<br />
 Price: @Product.Price<br />
-This Product is: @(@Product.IsActive ? "Active" : "Inactive")
+This Product is: @(@Product.IsActive ? "Active" : "Inactive")<br />
+Selected Property: @selectedProp<br />
+@if (!string.IsNullOrWhiteSpace(selectedProp)) 
+{
+    <p>Property Value: @Product.ProductProperties.FirstOrDefault(p => p.Key == selectedProp).Value</p>
+}
 <br /><br />
 
 Active: <input type="checkbox" @bind-value="Product.IsActive" checked="@(Product.IsActive ? "checked" : null)"/><br />
-Price: <input type="number" @bind-value="Product.Price" @bind-value:event="oninput"/>
+Price: <input type="number" @bind-value="Product.Price" @bind-value:event="oninput"/><br />
+Product Properties: 
+<select @bind="selectedProp">
+    @foreach (var prop in Product.ProductProperties)
+    {
+        <option value="@prop.Key">@prop.Key</option>
+    }
+</select>
 
 @code {
+    private string selectedProp = "";
+
     Demo_Product Product = new Demo_Product()
     {
         Id=1,
-        Name="Rice",
+        Name="Rose Candle",
         IsActive=true,
-        Price=10
+        Price=10,
+        ProductProperties = new List<Demo_ProductProp>()
+        {
+            new Demo_ProductProp { Id = 1, Key = "Color", Value="Black"},
+            new Demo_ProductProp { Id = 2, Key = "Flavor", Value = "Rose Jasmine" },
+            new Demo_ProductProp { Id = 3, Key = "Size", Value = "20oz"},
+        }
     };
 }
