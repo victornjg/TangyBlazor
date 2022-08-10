@@ -4,13 +4,20 @@
 
 <h3>Product</h3>
 Name: @Product.Name<br />
-Active: @Product.IsActive
+Active: @Product.IsActive<br />
+Price: @Product.Price<br />
+This Product is: @(@Product.IsActive ? "Active" : "Inactive")
+<br /><br />
+
+Active: <input type="checkbox" @bind-value="Product.IsActive" checked="@(Product.IsActive ? "checked" : null)"/><br />
+Price: <input type="number" @bind-value="Product.Price" @bind-value:event="oninput"/>
 
 @code {
     Demo_Product Product = new Demo_Product()
     {
         Id=1,
         Name="Rice",
-        IsActive=true
+        IsActive=true,
+        Price=10
     };
 }
