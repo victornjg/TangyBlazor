@@ -10,11 +10,23 @@
 
 <p><b>@messageText</b></p>
 
+@*<_AnotherChildComponent Placeholder="Placeholder from Parent" Required="true" MaxLength="5"></_AnotherChildComponent>*@
+
+@*<_AnotherChildComponent InputAttributes="InputAttributes"></_AnotherChildComponent>*@
+
+<_AnotherChildComponent placeholder="Placeholder from Parent" required="true" maxlength="5"></_AnotherChildComponent>
+
 @*<_ChildComponent Title="This is second child component">
 </_ChildComponent>*@
 
 @code {
     public string messageText = "";
+    //public Dictionary<string, object> InputAttributes { get; set; } = new()
+    //{
+    //    {"required", true},
+    //    {"maxlength", 5},
+    //    {"placeholder", "Placeholder from Parent"}
+    //};
 
     private void ShowMessage()
     {

@@ -1,0 +1,27 @@
+﻿<div>
+    <h4 class="text-primary pt-3">Another Child Component</h4>
+    @*<input id="nametemp" placeholder="@Placeholder" required="@Required" maxlength="@MaxLength"/>*@
+    <input id="nametemp" @attributes="InputAttributes" />
+</div>
+
+@code {
+    //[Parameter]
+    //public string Placeholder { get; set; } = "Initial placeholder text";
+
+    //[Parameter]
+    //public bool Required { get; set; } = false;
+
+    //[Parameter]
+    //public int MaxLength { get; set; } = 10;
+
+    //[Parameter]
+    //public Dictionary<string, object> InputAttributes { get; set; } = new()
+    //{
+    //    {"required", false},
+    //    {"maxlength", 10},
+    //    {"placeholder", "Initial placeholder text"}
+    //};
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object> InputAttributes { get; set; } = new();
+}
