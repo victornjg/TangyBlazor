@@ -1,4 +1,6 @@
 ﻿@page "/learnBlazor/blazorJs"
+@using TangyWeb_Server.Helper
+
 @inject IJSRuntime _jsRuntime
 
 <h3>BlazorJs</h3>
@@ -39,12 +41,14 @@
 
     private async Task ToastrSuccess()
     {
-        await _jsRuntime.InvokeVoidAsync("ShowToastr", "success", "Operation Successful");
+        //await _jsRuntime.InvokeVoidAsync("ShowToastr", "success", "Operation Successful");
+        await _jsRuntime.ToastrSuccess("Operation Successful");
     }
 
     private async Task ToastrFailure()
     {
-        await _jsRuntime.InvokeVoidAsync("ShowToastr", "error", "Operation Failed");
+        //await _jsRuntime.InvokeVoidAsync("ShowToastr", "error", "Operation Failed");
+        await _jsRuntime.ToastrError("Operation Failed");
     }
 
     private async Task SweetAlertSuccess() 
