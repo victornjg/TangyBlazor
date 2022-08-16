@@ -25,3 +25,11 @@ window.ShowSweetAlert = (type, message) => {
         });
     }
 }
+
+window.ShowDeleteConfirmationModal = () => {
+    $('#deleteConfirmationModal').modal('show');
+}
+
+window.HideDeleteConfirmationModal = () => {
+    $('#deleteConfirmationModal').modal('hide');
+}

@@ -4,6 +4,9 @@
 @using Tangy_Business.Repository.IRepository
 
 @inject ICategoryRepository _categoryRepo
+@inject IJSRuntime _jsRuntime
+
+<_DeleteConfirmationModal OnDeleteButtonClick="DeleteCategory" IsParentComponentProcessing="IsLoading"></_DeleteConfirmationModal>
 
 <div class="row mt-4">
     <div class="col-6">
@@ -29,6 +32,9 @@
                             <td>@category.Name</td>
                             <td>
                                 <NavLink href="@($"/category/edit/{category.Id}")" class="btn btn-primary">Edit</NavLink>
+                                <button class="btn btn-danger" @onclick="() => ShowDeleteConfirmationModal(category.Id)">
+                                    Delete
+                                </button>
                             </td>
                         </tr>
                     }
@@ -53,16 +59,45 @@
 
 @code {
     private IEnumerable<CategoryDTO> Categories { get; set; } = new List<CategoryDTO>();
-    private bool IsLoading { get; set; } = true;
+    private bool IsLoading { get; set; }
+    private long CategoryIdToDelete { get; set; }
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        await Task.Run(LoadCategories);
+        if (firstRender) 
+        {
+            IsLoading = true;
+            StateHasChanged();
+            await LoadCategories();
+            IsLoading = false;
+            StateHasChanged();
+        }
     }
 
-    private void LoadCategories()
+
+    private async Task LoadCategories()
     {
-        Categories = _categoryRepo.GetAll();
-        IsLoading = false;
+        Categories = await _categoryRepo.GetAll();
+    }
+
+    private void ShowDeleteConfirmationModal(long categoryId)
+    {
+        _jsRuntime.InvokeVoidAsync("ShowDeleteConfirmationModal");
+        CategoryIdToDelete = categoryId;
+    }
+
+    public async Task DeleteCategory()
+    {
+        if (CategoryIdToDelete > 0)
+        {
+            IsLoading = true;
+            await _categoryRepo.Delete(CategoryIdToDelete);
+            IsLoading = true;
+            await LoadCategories();
+            await _jsRuntime.InvokeVoidAsync("HideDeleteConfirmationModal");
+            CategoryIdToDelete = 0;
+            IsLoading = false;
+        }
+        
     }
 }
