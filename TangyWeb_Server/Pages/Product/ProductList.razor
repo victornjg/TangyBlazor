@@ -1,0 +1,116 @@
+﻿@page "/product"
+
+@using Tangy_Models
+@using Tangy_Business.Repository.IRepository
+@using TangyWeb_Server.Service.IService
+
+@inject IProductRepository _productRepo
+@inject IJSRuntime _jsRuntime
+@inject IFileUpload _fileUpload
+
+<_DeleteConfirmationModal OnDeleteButtonClick="DeleteProduct" IsParentComponentProcessing="IsLoading"></_DeleteConfirmationModal>
+
+<div class="row mt-4">
+    <div class="col-6">
+        <h4 class="card-title text-primary">Product List</h4>
+    </div>
+    <div class="col-4 offset-2">
+        <a href="product/create" class="btn btn-primary form-control">Add New Product </a>
+    </div>
+    <div class="col-12 p-3">
+        @if (Products.Any())
+        {
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Shop Favorites</th>
+                        <th>Customer Favorites</th>
+                        <th>Category</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var product in Products)
+                    {
+                        <tr>
+                            <td>@product.Name</td>
+                            <td><input type="checkbox" disabled checked="@product.ShopFavorites"/></td>
+                            <td><input type="checkbox" disabled checked="@product.CustomerFavorites"/></td>
+                            <td>@product.Category.Name</td>
+                            <td>
+                                <NavLink href="@($"/product/edit/{product.Id}")" class="btn btn-primary">Edit</NavLink>
+                                <button class="btn btn-danger" @onclick="() => ShowDeleteConfirmationModal(product.Id)">
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            if (IsLoading) 
+            {
+                <div class="text-center">
+                    <img src="/images/loading.gif">
+                </div>
+            }
+            else
+            {
+                <p>No records found.</p>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    private IEnumerable<ProductDTO> Products { get; set; } = new List<ProductDTO>();
+    private bool IsLoading { get; set; }
+    private long ProductIdToDelete { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) 
+        {
+            IsLoading = true;
+            StateHasChanged();
+            await LoadProducts();
+            IsLoading = false;
+            StateHasChanged();
+        }
+    }
+
+
+    private async Task LoadProducts()
+    {
+        Products = await _productRepo.GetAll();
+    }
+
+    private void ShowDeleteConfirmationModal(long productId)
+    {
+        _jsRuntime.InvokeVoidAsync("ShowDeleteConfirmationModal");
+        ProductIdToDelete = productId;
+    }
+
+    public async Task DeleteProduct()
+    {
+        if (ProductIdToDelete > 0)
+        {
+            IsLoading = true;
+            var product = Products.FirstOrDefault(p => p.Id == ProductIdToDelete);
+            if (!product.ImageUrl.Contains("default.png"))
+            {
+                _fileUpload.DeleteFile(product.ImageUrl);
+            }
+            await _productRepo.Delete(ProductIdToDelete);
+            await LoadProducts();
+            await _jsRuntime.InvokeVoidAsync("HideDeleteConfirmationModal");
+            await _jsRuntime.ToastrSuccess("Product deleted successfully.");
+            ProductIdToDelete = 0;
+            IsLoading = false;
+        }
+        
+    }
+}

@@ -1,0 +1,175 @@
+﻿@page "/product/create"
+@page "/product/edit/{productId:long}"
+
+@using Tangy_Models
+@using Tangy_Business.Repository.IRepository
+@using TangyWeb_Server.Service.IService
+
+@inject ICategoryRepository _categoryRepo
+@inject IProductRepository _productRepo
+@inject IFileUpload _fileUpload
+@inject IJSRuntime _jsRuntime
+@inject NavigationManager _navigationManager
+
+<div class="row my-2">
+    <h3 class="card-title text-primary mb-3 ml-3">@Title Product</h3>
+
+    <div class="col-md-10">
+        @if (IsLoading)
+        {
+            <div class="text-center">
+                <img src="/images/loading.gif">
+            </div>
+        }
+        else 
+        {
+            <EditForm Model="Product" OnValidSubmit="UpsertProduct">
+                <DataAnnotationsValidator />
+                @*<ValidationSummary/>*@
+                <div class="form-group">
+                    <label class="form-label">Name</label>
+                    <InputText @bind-Value="Product.Name" class="form-control"></InputText>
+                    <ValidationMessage For="()=>Product.Name"></ValidationMessage>
+                </div>
+                <div class="form-group">
+                    <label>Color</label>
+                    <InputText @bind-Value="Product.Color" class="form-control"></InputText> 
+                    <ValidationMessage For="()=>Product.Color"></ValidationMessage>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <InputTextArea @bind-Value="Product.Description" class="form-control"></InputTextArea>
+                    <ValidationMessage For="()=>Product.Description"></ValidationMessage>
+                </div>
+
+                <div class="row pt-3">
+                    <div class="form-group col-6">
+                        <div class="form-check">
+                            <InputCheckbox @bind-Value="Product.ShopFavorites" class="form-check-input"></InputCheckbox>
+                            <label class="form-check-label">Is Shop Favorites</label>
+                        </div>
+                    </div>
+                    <div class="form-group col-6">
+                        <div class="form-check">
+                            <InputCheckbox @bind-Value="Product.CustomerFavorites" class="form-check-input"></InputCheckbox>
+                            <label class="form-check-label">Is Customer Favorites</label>
+                        </div>
+                    </div>
+                    <div class="form-group col-6">
+                        <label>Category</label>
+                        <InputSelect @bind-Value="Product.CategoryId" class="form-select">
+                            <option value="0" disabled="disabled" selected>--Select Category--</option>
+                            @foreach (var category in Categories)
+                            {
+                                <option value="@category.Id">@category.Name</option>
+                            }
+                        </InputSelect>
+                        <ValidationMessage For="()=>Product.CategoryId"></ValidationMessage>
+                    </div>
+                    <div class="form-group pt-4 col-6">
+                        <InputFile OnChange="HandleImageUpload"></InputFile>
+                    </div>
+                </div>
+
+                <div class="form-group py-2">
+                    <button class="btn btn-primary">@Title</button>
+                    <NavLink href="product" class="btn btn-secondary">Back to list</NavLink>
+                </div>
+            </EditForm>
+        }
+    </div>
+
+    <div class="col-md-2">
+        <img src="@Product.ImageUrl" class="w-100">
+    </div>
+</div>
+
+@code {
+    private ProductDTO Product { get; set; } = new ProductDTO()
+    {
+        ImageUrl = "/images/default.png"
+    };
+    private IEnumerable<CategoryDTO> Categories { get; set; } = new List<CategoryDTO>();
+    private string Title { get; set; } = "Create";
+    private bool IsLoading { get; set; }
+    private string OldImageUrl { get; set; }
+    [Parameter]
+    public long ProductId { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) 
+        {
+            IsLoading = true;
+            StateHasChanged();
+            await LoadCategories();
+            if (ProductId > 0)
+            {
+                Title = "Update";
+                await LoadProduct();
+                OldImageUrl = Product.ImageUrl;
+            }
+            IsLoading = false;
+            StateHasChanged();
+
+        }
+    }
+
+    private async Task LoadCategories()
+    {
+        Categories = await _categoryRepo.GetAll();
+    }
+
+    private async Task LoadProduct()
+    {
+        Product = await _productRepo.Get(ProductId);
+    }
+
+    private async Task UpsertProduct()
+    {
+        if (ProductId > 0)
+        {
+            if (OldImageUrl != Product.ImageUrl) 
+            {
+                _fileUpload.DeleteFile(OldImageUrl);
+            }
+            await _productRepo.Update(Product);
+            await _jsRuntime.ToastrSuccess("Product updated successfully.");
+        }
+        else
+        {
+            await _productRepo.Create(Product);
+            await _jsRuntime.ToastrSuccess("Product created successfully.");
+        }
+        _navigationManager.NavigateTo("product");
+    }
+
+    private async Task HandleImageUpload(InputFileChangeEventArgs e)
+    {
+        IsLoading = true;
+        try 
+        {
+            if (e.FileCount > 0) 
+            {
+                var fileInfo = new FileInfo(e.File.Name);
+                var fileExtension = fileInfo.Extension.ToLower();
+                if (fileExtension == ".jpg" || fileExtension == ".jpeg" || fileExtension == ".png")
+                {
+                    Product.ImageUrl = await _fileUpload.UploadFile(e.File);
+                }
+                else
+                {
+                    await _jsRuntime.ToastrError("Please select .jpg/.jpeg/.png files only");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            await _jsRuntime.ToastrError(ex.Message);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+}
