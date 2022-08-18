@@ -1,0 +1,185 @@
+﻿@page "/product/price/{productId:long}"
+
+@using Tangy_Business.Repository.IRepository
+@using Tangy_Models
+
+@inject IProductRepository _productRepo
+@inject IProductPriceRepository _productPriceRepo
+@inject IJSRuntime _jsRuntime
+
+<_DeleteConfirmationModal OnDeleteButtonClick="DeleteProduct" IsParentComponentProcessing="IsLoading"></_DeleteConfirmationModal>
+<_LoadingSpinner Display="IsLoading"></_LoadingSpinner>
+@if (!IsLoading && Product != null) 
+{
+    <div class="row border p-2 mb-4">
+        <div class="col-11">
+            <div class="card-body">
+                <h4>@Product.Name</h4>
+                <span>Category : @Product.Category.Name</span><br />
+                Description : <span>@((MarkupString)Product.Description)</span>
+            </div>
+        </div>
+        <div class="col-1">
+            <img src="@Product.ImageUrl" class="w-100">
+        </div>
+    </div>
+
+    <RadzenButton Icon="add_circle_outline" style="margin-bottom: 10px" Text="Add New Order" Click="@InsertRow" Disabled=@(productPriceToInsert != null) />
+    <RadzenDataGrid @ref="productPricesGrid" AllowFiltering="true" AllowColumnResize="true" FilterMode="FilterMode.Advanced" AllowSorting="true" PageSize="5" AllowPaging="true" PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true"
+                Data="@Product.ProductPrices" TItem="ProductPriceDTO" RowUpdate="@OnUpdateRow" RowCreate="@OnCreateRow" ColumnWidth="300px" LogicalFilterOperator="LogicalFilterOperator.Or" EditMode="DataGridEditMode.Single">
+        <Columns>
+            <RadzenDataGridColumn TItem="ProductPriceDTO" Property="Id" Title="ID" />
+            <RadzenDataGridColumn TItem="ProductPriceDTO" Property="Size" Title="Size">
+                <EditTemplate Context="productPrice">
+                    <RadzenDropDown TValue="string" @bind-Value="productPrice.Size" Data="@SizeList" />
+                </EditTemplate>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ProductPriceDTO" Property="Price" Title="Price">
+                <EditTemplate Context="productPrice">
+                    <RadzenNumeric TValue="double" @bind-Value="productPrice.Price" />
+                </EditTemplate>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ProductPriceDTO" Context="productPrice" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="120px">
+                <Template Context="productPrice">
+                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Class="m-1" Click="@(args => EditRow(productPrice))" @onclick:stopPropagation="true">
+                    </RadzenButton>
+                </Template>
+                <EditTemplate Context="productPrice">
+                    <RadzenButton Icon="check" ButtonStyle="ButtonStyle.Primary" Class="m-1" Click="@((args) => SaveRow(productPrice))">
+                    </RadzenButton>
+                    <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Class="m-1" Click="@((args) => CancelEdit(productPrice))">
+                    </RadzenButton>
+                </EditTemplate>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ProductPriceDTO" Context="productPrice" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="60px">
+                <Template Context="productPrice">
+                    <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Size="ButtonSize.Small" Class="m-1" Click="@(args => DeleteRow(productPrice))" @onclick:stopPropagation="true">
+                    </RadzenButton>
+                </Template>
+                <EditTemplate Context="productPrice">
+                    <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Size="ButtonSize.Small" Class="m-1" Click="@(args => DeleteRow(productPrice))">
+                    </RadzenButton>
+                </EditTemplate>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+}
+
+@code {
+    [Parameter]
+    public long ProductId { get; set; }
+    private ProductDTO Product { get; set; }
+    private bool IsLoading { get; set; }
+    private ProductPriceDTO ProductPriceToDelete { get; set; }
+
+    private RadzenDataGrid<ProductPriceDTO> productPricesGrid;
+    private ProductPriceDTO productPriceToInsert;
+    private IEnumerable<String> SizeList = new List<String>()
+    {
+        "Small","Medium","Large","8oz","16oz","24oz"
+    };
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) {
+            IsLoading = true;
+            StateHasChanged();
+            await LoadProduct();
+            IsLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadProduct() 
+    {
+        Product = await _productRepo.Get(ProductId);
+    }
+
+    private async Task InsertRow()
+    {
+        productPriceToInsert = new ProductPriceDTO()
+        {
+            ProductId = Product.Id
+        };
+        await productPricesGrid.InsertRow(productPriceToInsert);
+    }
+
+    private async Task EditRow(ProductPriceDTO productPrice)
+    {
+        await productPricesGrid.EditRow(productPrice);
+    }
+
+    async Task SaveRow(ProductPriceDTO productPrice)
+    {
+        if (productPrice == productPriceToInsert)
+        {
+            productPriceToInsert = null;
+        }
+
+        await productPricesGrid.UpdateRow(productPrice);
+    }
+
+    private void CancelEdit(ProductPriceDTO productPrice)
+    {
+        if (productPrice == productPriceToInsert)
+        {
+            productPriceToInsert = null;
+        }
+
+        productPricesGrid.CancelEditRow(productPrice);
+    }
+
+    private async Task OnUpdateRow(ProductPriceDTO productPrice)
+    {
+        if (productPrice == productPriceToInsert)
+        {
+            productPriceToInsert = null;
+        }
+        await _productPriceRepo.Update(productPrice);
+        await _jsRuntime.ToastrSuccess("Product price updated successfully.");
+    }
+
+    private async Task OnCreateRow(ProductPriceDTO productPrice)
+    {
+        var result = await _productPriceRepo.Create(productPrice);
+        productPrice.Id = result.Id;
+        await _jsRuntime.ToastrSuccess("Product price created successfully.");
+    }
+
+    private async Task DeleteRow(ProductPriceDTO productPrice)
+    {
+        if (productPrice == productPriceToInsert)
+        {
+            productPriceToInsert = null;
+        }
+
+        if (Product.ProductPrices.Contains(productPrice))
+        {
+            ShowDeleteConfirmationModal(productPrice);
+        }
+        else
+        {
+            productPricesGrid.CancelEditRow(productPrice);
+        }
+    }
+
+    private void ShowDeleteConfirmationModal(ProductPriceDTO productPrice)
+    {
+        _jsRuntime.InvokeVoidAsync("ShowDeleteConfirmationModal");
+        ProductPriceToDelete = productPrice;
+    }
+
+    public async Task DeleteProduct()
+    {
+        if (ProductPriceToDelete.Id > 0)
+        {
+            Product.ProductPrices.Remove(ProductPriceToDelete);
+            var result = await _productPriceRepo.Delete(ProductPriceToDelete.Id);
+            if (result > 0)
+                await _jsRuntime.ToastrSuccess("Product price deleted successfully.");
+            await _jsRuntime.InvokeVoidAsync("HideDeleteConfirmationModal");
+            await productPricesGrid.Reload();
+            ProductPriceToDelete = new ProductPriceDTO();
+        }
+    }
+}

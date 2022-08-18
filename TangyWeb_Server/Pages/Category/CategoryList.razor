@@ -43,13 +43,8 @@
         }
         else
         {
-            if (IsLoading) 
-            {
-                <div class="text-center">
-                    <img src="/images/loading.gif">
-                </div>
-            }
-            else
+            <_LoadingSpinner Display="IsLoading"></_LoadingSpinner>
+            if (!IsLoading) 
             {
                 <p>No records found.</p>
             }

@@ -10,13 +10,8 @@
     <h3 class="card-title text-primary mb-3 ml-3">@Title Category</h3>
 
     <div class="col-10">
-        @if (IsLoading)
-        {
-            <div class="text-center">
-                <img src="/images/loading.gif">
-            </div>
-        }
-        else 
+        <_LoadingSpinner Display="IsLoading"></_LoadingSpinner>
+        @if (!IsLoading)
         {
             <EditForm Model="Category" OnValidSubmit="UpsertCategory">
                 <DataAnnotationsValidator />

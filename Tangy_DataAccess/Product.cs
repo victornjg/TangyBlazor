@@ -20,5 +20,6 @@ namespace Tangy_DataAccess
         public long CategoryId { get; set; }
         [ForeignKey("CategoryId")]
         public Category Category { get; set; }
+        public IList<ProductPrice> ProductPrices { get; set; }
     }
 }

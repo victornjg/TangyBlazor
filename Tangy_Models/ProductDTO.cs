@@ -23,5 +23,6 @@ namespace Tangy_Models
         public long CategoryId { get; set; }
         [ForeignKey("CategoryId")]
         public CategoryDTO Category { get; set; }
+        public IList<ProductPriceDTO> ProductPrices { get; set; }
     }
 }
