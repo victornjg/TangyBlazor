@@ -1,0 +1,104 @@
+﻿@page "/details/{ProductId:long}"
+
+@using TangyWeb_Client.Service.IService
+@using TangyWeb_Client.ViewModels
+@using Tangy_Models
+
+@inject IProductService _ProductService
+@inject NavigationManager _navigationManager
+
+@if (IsProcessing)
+{
+    <div style="position:fixed;top:50%;left:50%;margin-top:-50px;margin-left:-100px;">
+        <img src="images/ajax-loader.gif" />
+    </div>
+}
+else
+{
+    <RadzenCard class="m-3">
+        <EditForm OnValidSubmit="AddToCart" Model="DetailsVM" method="post">
+            <DataAnnotationsValidator />
+            <h3 class="h3"><b>@Product.Name</b></h3>
+            <div class="row">
+                <div class="col-9">
+                    <p>@Product.Description</p>
+                    <div class="row px-3 mt-3">
+                        @foreach (var productPrice in Product.ProductPrices)
+                        {
+                            @if (productPrice.Id == DetailsVM.SelectedProductPriceId)
+                            {
+                                <div class="col-2 bg-light text-center" style="border:3px solid #28A745; border-radius:10px;box-shadow:5px">
+                                    <p>@productPrice.Size</p>
+                                    <p>@productPrice.Price.ToString("c")</p>
+                                </div>
+                            }
+                            else
+                            {
+                                <div @onclick="() => SelectProductSize(productPrice.Id)" class="col-2 bg-light text-center" style="border:1px solid; border-radius:10px;box-shadow:5px">
+                                    <p>@productPrice.Size</p>
+                                    <p>@productPrice.Price.ToString("c")</p>
+                                </div>
+                            }
+                        }
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            @if (!Product.ProductPrices.Any())
+                            {
+                                <p class="text-warning">No Size available yet...</p>
+                            }
+                            else
+                            {
+                                <label>Count</label>
+                                <RadzenNumeric TValue="int" @bind-Value="DetailsVM.Count" Class="w-100" />
+                                <ValidationMessage For="()=>DetailsVM.Count"></ValidationMessage>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <RadzenImage Path="@Product.ImageUrl" Class="w-100" />
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-6 text-center">
+                    <RadzenButton Click="BackToHome" Text="Back to home" ButtonStyle="ButtonStyle.Secondary" />
+                </div>
+                <div class="col-6 text-center">
+                    <RadzenButton Text="Add to cart" ButtonStyle="ButtonStyle.Primary" ButtonType="ButtonType.Submit" />
+                </div>
+            </div>
+        </EditForm>
+    </RadzenCard>
+}
+
+@code {
+    [Parameter]
+    public long ProductId { get; set; }
+    private bool IsProcessing { get; set; }
+    private ProductDTO Product { get; set; }
+    private DetailsVM DetailsVM { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        IsProcessing = true;
+        Product = await _ProductService.Get(ProductId);
+        IsProcessing = false;
+    }
+
+    private void BackToHome()
+    {
+        _navigationManager.NavigateTo("/");
+    }
+
+    private void SelectProductSize(long productPriceId)
+    {
+        DetailsVM.SelectedProductPriceId = productPriceId;
+        DetailsVM.ProductPrice = Product.ProductPrices.FirstOrDefault(p => p.Id == productPriceId);
+    }
+
+    private async Task AddToCart()
+    {
+
+    }
+}

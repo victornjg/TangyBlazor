@@ -124,7 +124,7 @@
     {
         if (ProductId > 0)
         {
-            if (OldImageUrl != Product.ImageUrl) 
+            if (OldImageUrl != Product.ImageUrl && !OldImageUrl.Contains("default.png"))
             {
                 _fileUpload.DeleteFile(OldImageUrl);
             }

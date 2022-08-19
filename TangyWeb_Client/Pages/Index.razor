@@ -1,9 +1,74 @@
 ﻿@page "/"
 
-<PageTitle>Index</PageTitle>
+@using Tangy_Models
+@using TangyWeb_Client.Service.IService
 
-<h1>Hello, world!</h1>
+@inject IProductService _productService
+@inject NavigationManager _navigationManager
 
-Welcome to your new app.
+<PageTitle>Home</PageTitle>
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+@if (IsProcessing)
+{
+    <div style="position:fixed;top:50%;left:50%;margin-top:-50px;margin-left:-100px;">
+        <img src="images/ajax-loader.gif" />
+    </div>
+}
+else
+{
+    <div class="container">
+        @foreach (var category in Products.Select(p => p.Category.Name).Distinct())
+        {
+            <h2 class="text-success pl-1">@category</h2>
+            <div class="row">
+                @foreach (var product in Products.Where(p => p.Category.Name == category))
+                {
+                    <div class="col-4">
+                        <RadzenCard class="m-3">
+                            <span class="h3"><b>@product.Name</b></span>
+                            <span class="float-right"><b>@product.ProductPrices.OrderBy(p => p.Price).FirstOrDefault()?.Price.ToString("c")</b></span>
+                            <div class="row">
+                                <div class="col-12">
+                                    <RadzenImage Path="@product.ImageUrl" Class="w-100" />
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-12">
+                                    <p class="mt-1">Color: @product.Color</p>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-12">
+                                    <p>@product.Description</p>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-12 text-center">
+                                    <RadzenButton Click="() => OpenDetails(product.Id)" Text="View details" ButtonStyle="ButtonStyle.Primary" />
+                                </div>
+                            </div>
+                        </RadzenCard>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+}
+
+
+@code {
+    private bool IsProcessing { get; set; }
+    private IEnumerable<ProductDTO> Products { get;set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        IsProcessing = true;
+        Products = await _productService.GetAll();
+        IsProcessing = false;
+    }
+
+    private void OpenDetails(long productId)
+    {
+        _navigationManager.NavigateTo($"/details/{productId}");
+    }
+}
