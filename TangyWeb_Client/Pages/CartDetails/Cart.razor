@@ -21,7 +21,7 @@ else
         <div class="card">
             <div class="card-header bg-dark text-light ml-0 ">
                 <div class="row">
-                    <div class="col-6  pt-2">
+                    <div class="col-6 pt-2">
                         Shopping Cart
                     </div>
                     <div class="col-6 col-md-3 offset-md-3 text-end">
@@ -45,11 +45,11 @@ else
                             <div class="badge bg-info text-center" style="font-size:12px;">
                                 @item.Product.Color
                             </div>
-                            <div><p>Size : @item.ProductPrice.Size</p></div>
+                            <div><p>Size: @item.ProductPrice.Size</p></div>
                         </div>
                         <div class="col-12 text-sm-center col-md-7 text-md-start row  pt-lg-3 mt-3">
                             <div class="col-4 pt-1">
-                                <h6><strong>$@item.ProductPrice.Price.ToString("c") <span class="text-muted">x</span> @item.Count </strong></h6>
+                                <h6><strong>@item.ProductPrice.Price.ToString("c") <span class="text-muted">x</span> @item.Count </strong></h6>
                             </div>
                             <div class="col-6 col-sm-4 col-lg-6">
                                 <RadzenButton Click=@(() => IncrementItem(item, 1)) Icon="add_circle_outline" ButtonStyle="ButtonStyle.Primary" />
@@ -81,7 +81,7 @@ else
             </div>
             <div class="card-footer">
                 <div class="col-12  col-md-3 offset-md-9">
-                    <a href="" class="btn btn-secondary form-control">Summary</a>
+                    <a href="/summary" class="btn btn-secondary form-control">Summary</a>
                 </div>
             </div>
         </div>
