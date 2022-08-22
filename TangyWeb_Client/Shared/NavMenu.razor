@@ -1,17 +1,37 @@
-﻿<RadzenCard Class="w-100 py-1 px-2">
+﻿@using Blazored.LocalStorage
+@using TangyWeb_Client.ViewModels
+@using TangyWeb_Client.Service.IService
+@using Tangy_Common
+
+@inject ICartService _cartService
+@inject ISyncLocalStorageService _localStorageService
+
+@implements IDisposable
+
+<RadzenCard Class="w-100 py-1 px-2">
     <RadzenMenu>
-        <RadzenMenuItem Text="Tangy" Path="#"/>
-        <RadzenMenuItem Text="Home" Path="/" />
+        <RadzenMenuItem Text="Tangy" Path="/"/>
+        <RadzenMenuItem Icon="shopping_cart" Text="@(GetCartCount())" Path="/cart" />
     </RadzenMenu>
 </RadzenCard>
 
 @code {
-    private bool collapseNavMenu = true;
-
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
-
-    private void ToggleNavMenu()
+    protected override void OnInitialized()
     {
-        collapseNavMenu = !collapseNavMenu;
+        _cartService.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        _cartService.OnChange -= StateHasChanged;
+    }
+
+    private string GetCartCount()
+    {
+        var count = 0;
+        var shoppingCartItems = _localStorageService.GetItem<IList<ShoppingCart>>(SD.ShoppingCart);
+        if (shoppingCartItems != null)
+            count = shoppingCartItems.Count;
+        return count.ToString();
     }
 }
