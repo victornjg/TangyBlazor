@@ -1,6 +1,8 @@
 ﻿@page "/category/create"
 @page "/category/edit/{categoryId:long}"
 
+@attribute [Authorize]
+
 @using Tangy_Models
 @using Tangy_Business.Repository.IRepository
 @inject ICategoryRepository _categoryRepo
