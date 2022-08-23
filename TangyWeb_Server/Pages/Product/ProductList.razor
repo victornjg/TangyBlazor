@@ -1,5 +1,6 @@
 ﻿@page "/product"
 
+@using Tangy_Common
 @using Tangy_Models
 @using Tangy_Business.Repository.IRepository
 @using TangyWeb_Server.Service.IService
@@ -73,10 +74,17 @@
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthenticationState;
-        if (authState != null && !authState.User.Identity.IsAuthenticated)
-    {
-            var uri = new Uri(_navigationManager.Uri);
-            _navigationManager.NavigateTo($"/identity/account/login?returnUrl={uri.LocalPath}", forceLoad: true);
+        if (authState != null) 
+        {
+            if (!authState.User.Identity.IsAuthenticated)
+            {
+                var uri = new Uri(_navigationManager.Uri);
+                _navigationManager.NavigateTo($"/identity/account/login?returnUrl={uri.LocalPath}", forceLoad: true);
+            }
+            else if (!authState.User.IsInRole(SD.Role_Admin))
+            {
+                _navigationManager.NavigateTo("/ErrorPage");
+            }
         }
     }
 
