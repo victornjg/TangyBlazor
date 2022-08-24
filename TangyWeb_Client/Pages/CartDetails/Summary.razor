@@ -1,10 +1,13 @@
 ﻿@page "/summary"
 
+@attribute [Authorize]
+
 @using TangyWeb_Client.ViewModels
 @using Tangy_Models
 @using Tangy_Common
 @using Blazored.LocalStorage
 @using TangyWeb_Client.Service.IService
+@using Microsoft.AspNetCore.Authorization
 
 @inject ILocalStorageService _localStorage
 @inject IProductService _productService
@@ -144,6 +147,16 @@ else
             Order.OrderDetails.Add(orderDetailDTO);
             Order.OrderHeader.OrderTotal += (item.Count * productPrice.Price);
         }
+
+        var userDetails = await _localStorage.GetItemAsync<UserDTO>(SD.Local_UserDetails);
+        if (userDetails != null)
+        {
+            Order.OrderHeader.UserId = userDetails.Id;
+            Order.OrderHeader.Name = userDetails.Name;
+            Order.OrderHeader.Email = userDetails.Email;
+            Order.OrderHeader.PhoneNumber = userDetails.PhoneNumber;
+        }
+
         IsProcessing = false;
     }
 

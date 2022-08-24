@@ -12,6 +12,17 @@
     <RadzenMenu>
         <RadzenMenuItem Text="Tangy" Path="/"/>
         <RadzenMenuItem Icon="shopping_cart" Text="@(GetCartCount())" Path="/cart" />
+
+        <AuthorizeView>
+            <Authorized>
+                <p>Hello, @context.User.Identity.Name</p>
+                <RadzenMenuItem class="float-right" Text="Logout" Path="/logout" />
+            </Authorized>
+            <NotAuthorized>
+                <RadzenMenuItem class="float-end" Text="Register" Path="/register" />
+                <RadzenMenuItem class="float-right" Text="Login" Path="/login" />
+            </NotAuthorized>
+        </AuthorizeView>
     </RadzenMenu>
 </RadzenCard>
 
